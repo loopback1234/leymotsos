@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Кликер-Курение</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .tab {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #clickArea {
+            width: 200px;
+            height: 200px;
+            background-color: #f0f0f0;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        #smokeCircle {
+            width: 150px;
+            height: 150px;
+            background-color: #e0e0e0;
+            margin: 20px auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .stats {
+            margin: 20px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Кликер-Курение</h1>
+        
+        <button onclick="switchTab('clicker')">Кликер</button>
+        <button onclick="switchTab('smoking')">Курение</button>
+        <button onclick="showLeaderboard()">Рейтинг</button>
+        
+        <div id="clicker" class="tab active">
+            <div class="stats">
+                <p>Кликов: <span id="clicks">0</span></p>
+                <p>Сигарет: <span id="cigarettes">0</span></p>
+            </div>
+            
+            <div id="clickArea" onclick="registerClick()">
+                Кликай!
+            </div>
+            
+            <button onclick="buyCigarettes()">Купить пачку (500 кликов)</button>
+        </div>
+        
+        <div id="smoking" class="tab">
+            <div class="stats">
+                <p>Сигарет: <span id="smokeCount">0</span></p>
+                <p>Всего выкурено: <span id="totalSmoked">0</span></p>
+            </div>
+            
+            <div id="smokeCircle" ontouchstart="startSmoking()" ontouchend="stopSmoking()" 
+                 onmousedown="startSmoking()" onmouseup="stopSmoking()">
+                Зажать для затяга
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let clicks = 0;
+        let cigarettes = 0;
+        let totalSmoked = 0;
+        let smokingInterval;
+        let isSmoking = false;
+        
+        // Загрузка данных
+        function loadData() {
+            // Здесь будет запрос к боту за данными пользователя
+            // Временно используем примерные значения
+            clicks = 0;
+            cigarettes = 0;
+            totalSmoked = 0;
+            updateUI();
+        }
+        
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('clicks').textContent = clicks;
+            document.getElementById('cigarettes').textContent = cigarettes;
+            document.getElementById('smokeCount').textContent = cigarettes;
+            document.getElementById('totalSmoked').textContent = totalSmoked;
+        }
+        
+        // Переключение вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Обработка кликов
+        function registerClick() {
+            clicks++;
+            updateUI();
+            sendAction('click');
+        }
+        
+        // Покупка сигарет
+        function buyCigarettes() {
+            if (clicks >= 500) {
+                clicks -= 500;
+                cigarettes += 5;
+                updateUI();
+                sendAction('buy_cigarettes');
+                alert('Вы купили пачку сигарет (5 шт.)!');
+            } else {
+                alert('Недостаточно кликов! Нужно 500.');
+            }
+        }
+        
+        // Начало курения
+        function startSmoking() {
+            if (cigarettes > 0 && !isSmoking) {
+                isSmoking = true;
+                document.getElementById('smokeCircle').style.backgroundColor = '#a0a0a0';
+                smokingInterval = setInterval(() => {
+                    // Каждую секунду уменьшаем количество сигарет
+                }, 1000);
+            }
+        }
+        
+        // Окончание курения
+        function stopSmoking() {
+            if (isSmoking) {
+                isSmoking = false;
+                clearInterval(smokingInterval);
+                document.getElementById('smokeCircle').style.backgroundColor = '#e0e0e0';
+                
+                if (cigarettes > 0) {
+                    cigarettes--;
+                    totalSmoked++;
+                    updateUI();
+                    sendAction('smoke');
+                }
+            }
+        }
+        
+        // Показать рейтинг
+        function showLeaderboard() {
+            // Здесь будет запрос к боту за рейтингом
+            alert('Рейтинг будет показан в чате с ботом');
+        }
+        
+        // Отправка действия боту
+        function sendAction(action) {
+            const data = {
+                action: action,
+                clicks: clicks,
+                cigarettes: cigarettes,
+                totalSmoked: totalSmoked
+            };
+            
+            // В реальном приложении здесь будет отправка данных боту
+            console.log('Отправлено боту:', data);
+            
+            // В Telegram WebApp используем:
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.sendData(JSON.stringify(data));
+            }
+        }
+        
+        // Инициализация
+        window.onload = loadData;
+    </script>
+</body>
+</html>
